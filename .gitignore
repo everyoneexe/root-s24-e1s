@@ -1,0 +1,19 @@
+/build/*.o
+*.o
+*~
+.DS_Store
+
+# APKs live in backups, not git
+*.apk
+*.apks
+*.aab
+
+# Android / Gradle
+.gradle/
+**/build/
+local.properties
+*.iml
+.idea/
+.cxx/
+.externalNativeBuild/
+captures/

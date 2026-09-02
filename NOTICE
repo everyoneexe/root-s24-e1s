@@ -1,0 +1,13 @@
+Root S24
+Copyright 2026
+
+Native exploit/helper sources are a single-target fork of Root My Galaxy
+Payloads (https://github.com/BuSung-dev/Root-My-Galaxy-Payloads), licensed
+under the Apache License, Version 2.0. The DCZB2 profile, Next late-load
+path, and Android app code in this tree are additional work on that fork.
+
+The Android UI is derived from Root My Galaxy
+(https://github.com/BuSung-dev/Root-My-Galaxy), also Apache License 2.0.
+
+KernelSU Next is a separate project. The bundled LKM is GPL-2.0; see
+kernelsu/kernel/LICENSE.
