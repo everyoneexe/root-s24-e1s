@@ -38,3 +38,17 @@ data class DeviceSnapshot(
         }
     }
 }
+
+const val SAFE_UPTIME_MILLIS = 90_000L
+
+fun formatUptime(uptimeMillis: Long, context: android.content.Context): String {
+    val totalSeconds = (uptimeMillis / 1000L).coerceAtLeast(0)
+    val hours = totalSeconds / 3600L
+    val minutes = (totalSeconds % 3600L) / 60L
+    val seconds = totalSeconds % 60L
+    return when {
+        hours > 0 -> context.getString(R.string.uptime_format_hours, hours, minutes, seconds)
+        minutes > 0 -> context.getString(R.string.uptime_format_minutes, minutes, seconds)
+        else -> context.getString(R.string.uptime_format_seconds, seconds)
+    }
+}

@@ -37,6 +37,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -61,6 +62,7 @@ import androidx.compose.material.icons.rounded.LightMode
 import androidx.compose.material.icons.rounded.Link
 import androidx.compose.material.icons.rounded.Memory
 import androidx.compose.material.icons.rounded.Palette
+import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material.icons.rounded.Security
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.VerifiedUser
@@ -118,6 +120,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.busung.roots24.ui.theme.RootS24Theme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import android.os.SystemClock
 import java.text.DateFormat
 import java.util.Date
 import java.util.UUID
@@ -127,7 +130,7 @@ class MainActivity : ComponentActivity() {
     private var resumedOnce = false
     private var accentColor by mutableStateOf(AccentColor.Dynamic)
     private var themeMode by mutableStateOf(AppThemeMode.System)
-    private var shizukuMode by mutableStateOf(false)
+    private var shizukuMode by mutableStateOf(true)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -252,10 +255,51 @@ private fun RootApp(
     val history by installViewModel.history.collectAsStateWithLifecycle()
     var selectedPage by remember { mutableStateOf(AppPage.Overview) }
     var showInstallConfirmation by remember { mutableStateOf(false) }
+    var showShizukuRequiredDialog by remember { mutableStateOf(false) }
+    var uptimeMillis by remember { mutableStateOf(SystemClock.elapsedRealtime()) }
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     val device = remember { DeviceSnapshot.current() }
     val view = LocalView.current
 
+    LaunchedEffect(Unit) {
+        while (true) {
+            uptimeMillis = SystemClock.elapsedRealtime()
+            delay(1000L)
+        }
+    }
+
+    if (showShizukuRequiredDialog) {
+        AlertDialog(
+            onDismissRequest = { showShizukuRequiredDialog = false },
+            icon = { Icon(Icons.Rounded.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+            title = {
+                DialogDimAmount(0.34f)
+                Text(stringResource(R.string.shizuku_required_title))
+            },
+            text = { Text(stringResource(R.string.shizuku_required_body)) },
+            confirmButton = {
+                FilledTonalButton(onClick = {
+                    clickHaptic(view)
+                    showShizukuRequiredDialog = false
+                    openShizukuManager(context)
+                }) {
+                    Text(stringResource(R.string.action_open_shizuku))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    clickHaptic(view)
+                    showShizukuRequiredDialog = false
+                }) {
+                    Text(stringResource(R.string.action_cancel))
+                }
+            },
+        )
+    }
+
     if (showInstallConfirmation) {
+        val isFreshBoot = uptimeMillis < SAFE_UPTIME_MILLIS
         AlertDialog(
             onDismissRequest = { showInstallConfirmation = false },
             icon = { Icon(painterResource(R.drawable.ic_app_logo), contentDescription = null) },
@@ -263,14 +307,86 @@ private fun RootApp(
                 DialogDimAmount(0.34f)
                 Text(stringResource(R.string.install_confirm_title))
             },
-            text = { Text(stringResource(R.string.install_confirm_body)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(stringResource(R.string.install_confirm_body))
+                    Surface(
+                        shape = MaterialTheme.shapes.medium,
+                        color = if (isFreshBoot) {
+                            MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.55f)
+                        } else {
+                            MaterialTheme.colorScheme.surfaceContainerHighest
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        ) {
+                            Icon(
+                                imageVector = if (isFreshBoot) Icons.Rounded.Schedule else Icons.Rounded.Schedule,
+                                contentDescription = null,
+                                tint = if (isFreshBoot) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp),
+                            )
+                            Text(
+                                text = if (isFreshBoot) {
+                                    stringResource(R.string.uptime_fresh_warning, formatUptime(uptimeMillis, context))
+                                } else {
+                                    stringResource(R.string.uptime_settled_info, formatUptime(uptimeMillis, context))
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (isFreshBoot) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                    Surface(
+                        shape = MaterialTheme.shapes.medium,
+                        color = if (shizukuMode) {
+                            MaterialTheme.colorScheme.surfaceContainerHighest
+                        } else {
+                            MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.55f)
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        ) {
+                            Icon(
+                                imageVector = if (shizukuMode) Icons.Rounded.CheckCircle else Icons.Rounded.Warning,
+                                contentDescription = null,
+                                tint = if (shizukuMode) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(20.dp),
+                            )
+                            Text(
+                                text = if (shizukuMode) {
+                                    stringResource(R.string.shizuku_status_running)
+                                } else {
+                                    stringResource(R.string.shizuku_disabled_warning)
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (shizukuMode) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onErrorContainer,
+                            )
+                        }
+                    }
+                }
+            },
             confirmButton = {
                 FilledTonalButton(onClick = {
                     clickHaptic(view)
                     showInstallConfirmation = false
                     openInstaller()
                 }) {
-                    Text(stringResource(R.string.action_confirm))
+                    Text(
+                        if (isFreshBoot) {
+                            stringResource(R.string.action_confirm_and_queue)
+                        } else {
+                            stringResource(R.string.action_confirm)
+                        }
+                    )
                 }
             },
             dismissButton = {
@@ -311,7 +427,27 @@ private fun RootApp(
                     padding = padding,
                     device = device,
                     installState = installState,
-                    onInstall = { showInstallConfirmation = true },
+                    uptimeMillis = uptimeMillis,
+                    onInstall = {
+                        if (shizukuMode) {
+                            if (!ShizukuController.isRunning()) {
+                                showShizukuRequiredDialog = true
+                            } else if (!ShizukuController.isGranted()) {
+                                scope.launch {
+                                    val granted = ShizukuController.requestPermission()
+                                    if (granted) {
+                                        showInstallConfirmation = true
+                                    } else {
+                                        showShizukuRequiredDialog = true
+                                    }
+                                }
+                            } else {
+                                showInstallConfirmation = true
+                            }
+                        } else {
+                            showInstallConfirmation = true
+                        }
+                    },
                 )
                 AppPage.History -> HistoryPage(
                     padding,
@@ -336,6 +472,7 @@ private fun OverviewPage(
     padding: PaddingValues,
     device: DeviceSnapshot,
     installState: InstallUiState,
+    uptimeMillis: Long,
     onInstall: () -> Unit,
 ) {
     LazyColumn(
@@ -372,15 +509,19 @@ private fun OverviewPage(
                 )
             }
         }
-        item { InstallStatusCard(installState, onInstall) }
-        item { DeviceCard(device) }
+        item { InstallStatusCard(installState, uptimeMillis, onInstall) }
+        item { DeviceCard(device, uptimeMillis) }
         item { HowItWorksCard() }
         item { KernelSuCard() }
     }
 }
 
 @Composable
-private fun InstallStatusCard(installState: InstallUiState, onInstall: () -> Unit) {
+private fun InstallStatusCard(
+    installState: InstallUiState,
+    uptimeMillis: Long,
+    onInstall: () -> Unit,
+) {
     val context = LocalContext.current
     val view = LocalView.current
     val interactionSource = remember { MutableInteractionSource() }
@@ -466,19 +607,38 @@ private fun InstallStatusCard(installState: InstallUiState, onInstall: () -> Uni
                         installState.phase == InstallPhase.Failed && installState.supported ->
                             stringResource(R.string.install_tap_retry)
                         !installState.supported -> stringResource(R.string.home_unsupported_hint)
+                        uptimeMillis < SAFE_UPTIME_MILLIS -> stringResource(R.string.install_tap_queue_auto)
                         else -> stringResource(R.string.install_tap_start)
                     },
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.86f),
                     maxLines = 2,
                 )
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Schedule,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp),
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.75f),
+                    )
+                    Text(
+                        text = "${stringResource(R.string.uptime)}: ${formatUptime(uptimeMillis, context)}",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f),
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun DeviceCard(device: DeviceSnapshot) {
+private fun DeviceCard(device: DeviceSnapshot, uptimeMillis: Long) {
+    val context = LocalContext.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
@@ -494,6 +654,7 @@ private fun DeviceCard(device: DeviceSnapshot) {
             InfoRow(Icons.Rounded.Code, stringResource(R.string.firmware), device.fingerprint)
             InfoRow(Icons.Rounded.Info, stringResource(R.string.system), "Android ${device.androidRelease} (API ${device.sdk})")
             InfoRow(Icons.Rounded.Info, stringResource(R.string.kernel), device.kernelRelease)
+            InfoRow(Icons.Rounded.Schedule, stringResource(R.string.uptime), formatUptime(uptimeMillis, context))
         }
     }
 }
@@ -515,7 +676,7 @@ private fun HowItWorksCard() {
         Triple(Icons.Rounded.Security, R.string.step_device_title, R.string.step_device_detail),
         Triple(Icons.Rounded.Inventory2, R.string.step_stage_title, R.string.step_stage_detail),
         Triple(Icons.Rounded.Memory, R.string.step_exploit_title, R.string.step_exploit_detail),
-        Triple(Icons.Rounded.CheckCircle, R.string.step_ksu_title, R.string.step_ksu_detail),
+        Triple(Icons.Rounded.VerifiedUser, R.string.step_ksu_title, R.string.step_ksu_detail),
     )
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -713,10 +874,40 @@ private fun SettingsPage(
     var showColorDialog by remember { mutableStateOf(false) }
     var showAboutDialog by remember { mutableStateOf(false) }
     var showShizukuMissingDialog by remember { mutableStateOf(false) }
+    var showShizukuDisableWarningDialog by remember { mutableStateOf(false) }
     var languageMenuTop by remember { mutableStateOf(32.dp) }
     var colorMenuTop by remember { mutableStateOf(32.dp) }
     val density = LocalDensity.current
     val currentLanguageTag = AppPreferences.languageTag(context)
+
+    if (showShizukuDisableWarningDialog) {
+        AlertDialog(
+            onDismissRequest = { showShizukuDisableWarningDialog = false },
+            icon = { Icon(Icons.Rounded.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+            title = {
+                DialogDimAmount(0.34f)
+                Text(stringResource(R.string.shizuku_disable_warning_title))
+            },
+            text = { Text(stringResource(R.string.shizuku_disable_warning_body)) },
+            confirmButton = {
+                FilledTonalButton(onClick = {
+                    clickHaptic(view)
+                    showShizukuDisableWarningDialog = false
+                    onShizukuModeChanged(false)
+                }) {
+                    Text(stringResource(R.string.action_disable_anyway))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    clickHaptic(view)
+                    showShizukuDisableWarningDialog = false
+                }) {
+                    Text(stringResource(R.string.action_keep_enabled))
+                }
+            },
+        )
+    }
 
     if (showShizukuMissingDialog) {
         AlertDialog(
@@ -836,7 +1027,7 @@ private fun SettingsPage(
                     onCheckedChange = { enabled ->
                         clickHaptic(view)
                         if (!enabled) {
-                            onShizukuModeChanged(false)
+                            showShizukuDisableWarningDialog = true
                         } else {
                             scope.launch {
                                 ShizukuController.pingUntilRunning()
