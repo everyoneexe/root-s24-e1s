@@ -178,12 +178,23 @@ private enum class AppPage(@StringRes val label: Int, val icon: ImageVector) {
     Settings(R.string.nav_settings, Icons.Rounded.Settings),
 }
 
+private const val KERNEL_SU_PACKAGE = "me.weishu.kernelsu"
 private const val KERNEL_SU_NEXT_PACKAGE = "com.rifsxd.ksunext"
-private const val KERNEL_SU_NEXT_URL =
-    "https://github.com/KernelSU-Next/KernelSU-Next/releases/download/v3.3.0/KernelSU_Next_v3.3.0_33214-release.apk"
-private const val KERNEL_SU_NEXT_HOME_URL = "https://kernelsu-next.github.io/KernelSU-Next/"
+private const val KERNEL_SU_URL =
+    "https://github.com/tiann/KernelSU/releases/download/v3.3.0/KernelSU_v3.3.0_32601-release.apk"
+private const val KERNEL_SU_HOME_URL = "https://kernelsu.org/"
 private const val SHIZUKU_MANAGER_PACKAGE = "moe.shizuku.manager"
 private const val SHIZUKU_MANAGER_URL = "https://github.com/thedjchi/Shizuku/releases/"
+
+private fun openKernelSuManager(context: Context) {
+    val launch = context.packageManager.getLaunchIntentForPackage(KERNEL_SU_PACKAGE)
+        ?: context.packageManager.getLaunchIntentForPackage(KERNEL_SU_NEXT_PACKAGE)
+    if (launch != null) {
+        context.startActivity(launch)
+    } else {
+        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(KERNEL_SU_URL)))
+    }
+}
 
 private data class LanguageOption(@StringRes val label: Int, val tag: String)
 
@@ -364,7 +375,7 @@ private fun OverviewPage(
         item { InstallStatusCard(installState, onInstall) }
         item { DeviceCard(device) }
         item { HowItWorksCard() }
-        item { KernelSuNextCard() }
+        item { KernelSuCard() }
     }
 }
 
@@ -374,7 +385,8 @@ private fun InstallStatusCard(installState: InstallUiState, onInstall: () -> Uni
     val view = LocalView.current
     val interactionSource = remember { MutableInteractionSource() }
     val managerInstalled = remember(installState) {
-        context.packageManager.getLaunchIntentForPackage(KERNEL_SU_NEXT_PACKAGE) != null
+        context.packageManager.getLaunchIntentForPackage(KERNEL_SU_PACKAGE) != null ||
+            context.packageManager.getLaunchIntentForPackage(KERNEL_SU_NEXT_PACKAGE) != null
     }
     Card(
         onClick = {
@@ -382,12 +394,7 @@ private fun InstallStatusCard(installState: InstallUiState, onInstall: () -> Uni
             when {
                 installState.busy -> Unit
                 installState.phase == InstallPhase.Installed -> {
-                    val launch = context.packageManager.getLaunchIntentForPackage(KERNEL_SU_NEXT_PACKAGE)
-                    if (launch != null) {
-                        context.startActivity(launch)
-                    } else {
-                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(KERNEL_SU_NEXT_URL)))
-                    }
+                    openKernelSuManager(context)
                 }
                 !installState.supported -> Unit
                 else -> onInstall()
@@ -552,18 +559,13 @@ private fun HowItWorksCard() {
 }
 
 @Composable
-private fun KernelSuNextCard() {
+private fun KernelSuCard() {
     val context = LocalContext.current
     val view = LocalView.current
     Card(
         onClick = {
             clickHaptic(view)
-            val launch = context.packageManager.getLaunchIntentForPackage(KERNEL_SU_NEXT_PACKAGE)
-            if (launch != null) {
-                context.startActivity(launch)
-            } else {
-                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(KERNEL_SU_NEXT_URL)))
-            }
+            openKernelSuManager(context)
         },
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
@@ -1044,7 +1046,7 @@ private fun AboutDialog(onDismiss: () -> Unit) {
                 Surface(
                     onClick = {
                         clickHaptic(view)
-                        uriHandler.openUri(KERNEL_SU_NEXT_HOME_URL)
+                        uriHandler.openUri(KERNEL_SU_HOME_URL)
                     },
                     color = Color.Transparent,
                     shape = MaterialTheme.shapes.medium,

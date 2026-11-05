@@ -149,11 +149,12 @@ class InstallViewModel(application: Application) : AndroidViewModel(application)
                 setPhase(InstallPhase.LoadingKernelSu, app.getString(R.string.status_ksu_loading))
                 InstallReceipt.store(app)
                 when {
-                    KernelSuProbe.isVisibleToApp() -> appendLog("[+] kernelsu Live")
+                    KernelSuProbe.isSuBinaryWorking() -> appendLog("[+] KernelSU su binary is Live")
+                    KernelSuProbe.isVisibleToApp() -> appendLog("[+] KernelSU Live")
                     KernelSuProbe.isVisibleThroughShizuku() ->
-                        appendLog("[+] kernelsu Live (Shizuku)")
+                        appendLog("[+] KernelSU Live (Shizuku)")
                     else -> appendLog(
-                        "[+] KernelSU Next late-load ok; /proc/modules hidden from app UID",
+                        "[+] KernelSU late-load ok; /proc/modules hidden from app UID by SELinux",
                     )
                 }
 
@@ -217,6 +218,7 @@ class InstallViewModel(application: Application) : AndroidViewModel(application)
                 put("EXPLOIT_ATTEMPT_TIMEOUT_SEC", EXPLOIT_ATTEMPT_TIMEOUT_SEC)
                 put("CVE43499_ROOT_HELPER", helper.absolutePath)
                 put("CVE43499_KSUD_NEXT", ksud.absolutePath)
+                put("KSU_PACKAGE_NAME", preferredManagerPackage())
             }
             processBuilder.start()
         }
@@ -256,7 +258,10 @@ class InstallViewModel(application: Application) : AndroidViewModel(application)
             }
             require(
                 rawLog.contains("root kernelsu late-load ok=1") ||
-                    (rawLog.contains("done=1 root=1") && KernelSuProbe.isActive(app)),
+                    rawLog.contains("late-load ok=1") ||
+                    (rawLog.contains("done=1 root=1") && KernelSuProbe.isActive(app)) ||
+                    KernelSuProbe.isActive(app) ||
+                    KernelSuProbe.isSuBinaryWorking(),
             ) {
                 app.getString(R.string.error_success_marker)
             }
@@ -293,12 +298,23 @@ class InstallViewModel(application: Application) : AndroidViewModel(application)
         return staged
     }
 
+    private fun preferredManagerPackage(): String {
+        return if (app.packageManager.getLaunchIntentForPackage("me.weishu.kernelsu") != null) {
+            "me.weishu.kernelsu"
+        } else if (app.packageManager.getLaunchIntentForPackage("com.rifsxd.ksunext") != null) {
+            "com.rifsxd.ksunext"
+        } else {
+            "me.weishu.kernelsu"
+        }
+    }
+
     private fun shizukuEnvironment(helperPath: String, ksudPath: String): Array<String> = arrayOf(
         "EXPLOIT_ATTEMPTS=$EXPLOIT_ATTEMPTS",
         "P0_ATTEMPT_TIMEOUT_SEC=$P0_ATTEMPT_TIMEOUT_SEC",
         "EXPLOIT_ATTEMPT_TIMEOUT_SEC=$EXPLOIT_ATTEMPT_TIMEOUT_SEC",
         "CVE43499_ROOT_HELPER=$helperPath",
         "CVE43499_KSUD_NEXT=$ksudPath",
+        "KSU_PACKAGE_NAME=${preferredManagerPackage()}",
     )
 
     private fun drainProcessOutput(process: Process, buffer: StringBuilder): String {
