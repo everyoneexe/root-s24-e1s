@@ -101,4 +101,27 @@
     <string name="error_helper_unavailable">Bootstrap yardımcısı çalıştırılamıyor</string>
     <string name="log_shizuku_prepare">[*] Shizuku çalıştırması hazırlanıyor</string>
     <string name="log_shizuku_permission">[+] Shizuku izni verildi</string>
+    <string name="uptime">Çalışma Süresi</string>
+    <string name="uptime_format_seconds">%1$d sn</string>
+    <string name="uptime_format_minutes">%1$d dk %2$d sn</string>
+    <string name="uptime_format_hours">%1$d sa %2$d dk %3$d sn</string>
+    <string name="uptime_fresh_warning">Cihaz henüz yeni açıldı (%1$s). Çekirdek belleğinin oturması için 1–2 dakika beklemeniz önerilir.</string>
+    <string name="uptime_settled_info">Çalışma süresi: %1$s (Sistem kararlı)</string>
+    <string name="shizuku_required_title">Shizuku Zorunlu</string>
+    <string name="shizuku_required_body">Root işleminin kararlı çalışabilmesi için Shizuku servisinin çalışması ve izin verilmiş olması zorunludur. Lütfen Shizuku\'yu başlatıp izin verin.</string>
+    <string name="shizuku_status_running">Shizuku: Çalışıyor &amp; Yetkili</string>
+    <string name="shizuku_status_need_perm">Shizuku: İzin Bekleniyor</string>
+    <string name="shizuku_status_not_running">Shizuku: Çalışmıyor</string>
+    <string name="action_open_shizuku">Shizuku\'yu Aç</string>
+    <string name="shizuku_disable_warning_title">Shizuku kapatılsın mı?</string>
+    <string name="shizuku_disable_warning_body">Shizuku olmadan exploit kısıtlı uygulama yetkileriyle çalışır. SELinux izolasyonu nedeniyle çalışma ve başarı oranı oldukça düşüktür. Yine de kapatmak istiyor musunuz?</string>
+    <string name="action_disable_anyway">Yine de Kapat</string>
+    <string name="action_keep_enabled">Açık Tut</string>
+    <string name="shizuku_disabled_warning">Shizuku kapalı: Çalışma ve başarı oranı düşüktür.</string>
+    <string name="install_waiting_uptime_title">Güvenli Çalışma Süresi Bekleniyor</string>
+    <string name="install_waiting_uptime_subtitle">%1$d saniye sonra otomatik başlayacak (hedef: 01:30)...</string>
+    <string name="install_waiting_uptime_log">[*] Cihaz yeni açıldı (%2$s).\n[*] Çekirdek ve bellek kararlılığı için bekleniyor (Kalan: %1$d saniye)...\n[*] Güvenli süreye (01:30) ulaşıldığında root işlemi otomatik olarak başlayacaktır.\n[*] Beklemek istemiyorsanız aşağıdaki \'Şimdi Başlat\' butonuna dokunabilirsiniz.</string>
+    <string name="install_skip_wait">Şimdi Başlat</string>
+    <string name="install_tap_queue_auto">Dokun ve başlat (01:30\'da otomatik başlar)</string>
+    <string name="action_confirm_and_queue">Onayla ve Otomatik Başlat</string>
 </resources>

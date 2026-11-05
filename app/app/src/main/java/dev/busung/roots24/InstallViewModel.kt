@@ -134,6 +134,8 @@ class InstallViewModel(application: Application) : AndroidViewModel(application)
                         error(app.getString(R.string.error_shizuku_permission))
                     }
                     appendLog(app.getString(R.string.log_shizuku_permission))
+                } else {
+                    appendLog("[!] " + app.getString(R.string.shizuku_disabled_warning))
                 }
                 val device = DeviceSnapshot.current()
                 require(device.supported) { app.getString(R.string.error_unsupported_device) }

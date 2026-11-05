@@ -111,4 +111,27 @@
     <string name="error_helper_unavailable">Bootstrap helper is not executable</string>
     <string name="log_shizuku_prepare">[*] Preparing Shizuku execution</string>
     <string name="log_shizuku_permission">[+] Shizuku permission granted</string>
+    <string name="uptime">Uptime</string>
+    <string name="uptime_format_seconds">%1$d s</string>
+    <string name="uptime_format_minutes">%1$d m %2$d s</string>
+    <string name="uptime_format_hours">%1$d h %2$d m %3$d s</string>
+    <string name="uptime_fresh_warning">Device rebooted recently (%1$s). Waiting 1–2 minutes is recommended for kernel memory to settle.</string>
+    <string name="uptime_settled_info">Uptime: %1$s (System memory settled)</string>
+    <string name="shizuku_required_title">Shizuku Required</string>
+    <string name="shizuku_required_body">Root installation requires Shizuku to be running and authorized. Please launch Shizuku and grant permission before starting.</string>
+    <string name="shizuku_status_running">Shizuku: Running &amp; Authorized</string>
+    <string name="shizuku_status_need_perm">Shizuku: Permission Required</string>
+    <string name="shizuku_status_not_running">Shizuku: Not Running</string>
+    <string name="action_open_shizuku">Open Shizuku</string>
+    <string name="shizuku_disable_warning_title">Disable Shizuku?</string>
+    <string name="shizuku_disable_warning_body">Without Shizuku, the exploit runs with restricted app permissions. Due to SELinux isolation, the success rate is significantly lower. Are you sure you want to disable it?</string>
+    <string name="action_disable_anyway">Disable Anyway</string>
+    <string name="action_keep_enabled">Keep Enabled</string>
+    <string name="shizuku_disabled_warning">Shizuku is disabled: Success rate is significantly lower.</string>
+    <string name="install_waiting_uptime_title">Waiting for Safe Uptime</string>
+    <string name="install_waiting_uptime_subtitle">Auto-starting in %1$d seconds (target: 01:30)...</string>
+    <string name="install_waiting_uptime_log">[*] System recently booted (%2$s).\n[*] Waiting for kernel stability (%1$d seconds remaining)...\n[*] Root exploit will start automatically once target uptime (01:30) is reached.\n[*] Tap \'Start Now\' below if you want to skip waiting.</string>
+    <string name="install_skip_wait">Start Now</string>
+    <string name="install_tap_queue_auto">Tap to start (auto-starts at 01:30)</string>
+    <string name="action_confirm_and_queue">Confirm &amp; Auto-Start</string>
 </resources>
