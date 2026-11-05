@@ -490,11 +490,16 @@ static int run_kernelsu_late_load(struct su_request *request, int conn) {
       _exit(12);
     }
     if (loader == 0) {
-      /* Let the downloaded target-specific ksud select its embedded module
+      /* Let the target-specific ksud select its embedded module
        * from the running kernel.  Ephemeral mode avoids replacing an existing
        * /data/adb/ksud while the app only needs the module for this boot. */
+      const char *pkg = getenv("KSU_PACKAGE_NAME");
+      if (!pkg || !pkg[0]) {
+        pkg = "me.weishu.kernelsu";
+      }
+      dprintf(STDERR_FILENO, "late-load: manager package=%s\n", pkg);
       execl(LOGCAT_PATH, "logcat", "late-load",
-            "--package-name", "com.rifsxd.ksunext", (char *)NULL);
+            "--package-name", pkg, (char *)NULL);
       dprintf(STDERR_FILENO, "late-load: exec: %s\n", strerror(errno));
       _exit(12);
     }
@@ -851,7 +856,7 @@ static void serve_one(int conn) {
     return;
   }
 
-  int is_kernelsu_late_load = request.header.argc == 2 &&
+  int is_kernelsu_late_load = request.header.argc >= 2 &&
                               strcmp(request.argv[1], "--late-load") == 0;
   int status = is_kernelsu_late_load
                    ? run_kernelsu_late_load(&request, conn)

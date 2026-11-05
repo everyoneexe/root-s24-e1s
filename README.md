@@ -1,8 +1,8 @@
 # Root S24 (e1s / S921BXXSDCZB2)
 
 Per-boot local root on **Galaxy S24 SM-S921B** firmware `S921BXXSDCZB2`
-(kernel `6.1.138-android14-11`), then late-load **KernelSU Next** so
-`com.rifsxd.ksunext` reports Working LKM.
+(kernel `6.1.138-android14-11`), then late-load **KernelSU** so
+`me.weishu.kernelsu` (or `com.rifsxd.ksunext`) reports Working LKM.
 
 Not affiliated with [Root My Galaxy](https://github.com/BuSung-dev/Root-My-Galaxy).
 No GitHub payload feed, no multi-device catalog. One firmware, bundled
@@ -12,8 +12,8 @@ payload. Use a device you own.
 
 Install the APK from **[Releases](https://github.com/everyoneexe/root-s24-e1s/releases)**.
 
-KernelSU Next manager (required):
-[v3.3.0](https://github.com/KernelSU-Next/KernelSU-Next/releases/download/v3.3.0/KernelSU_Next_v3.3.0_33214-release.apk)
+KernelSU manager (required):
+[v3.3.0](https://github.com/tiann/KernelSU/releases/download/v3.3.0/KernelSU_v3.3.0_32601-release.apk)
 
 ## Device
 
@@ -25,7 +25,7 @@ KernelSU Next manager (required):
 | Kernel | 6.1.138-android14-11 |
 | Bug | CVE-2026-43499 (futex PI UAF) |
 | Root | RAM-only; reboot drops it |
-| Manager | KernelSU Next v3.3.0 |
+| Manager | KernelSU v3.3.0 (or Next) |
 
 ## Layout
 
