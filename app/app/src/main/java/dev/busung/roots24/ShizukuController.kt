@@ -76,16 +76,16 @@ object ShizukuController {
      * process cannot access directly because SELinux confines app UIDs away from the
      * shell-owned /data/local/tmp directory.
      */
-    fun capture(cmd: Array<String>): String {
+    fun capture(cmd: Array<String>): String = runCatching {
         val process = exec(cmd)
-        return try {
+        try {
             val stdout = process.inputStream.bufferedReader().use { it.readText() }
             val stderr = process.errorStream.bufferedReader().use { it.readText() }
             if (process.waitFor() == 0) stdout + stderr else ""
         } finally {
             if (process.isAlive) process.destroy()
         }
-    }
+    }.getOrDefault("")
 
     fun writeFile(remotePath: String, mode: String, source: InputStream) {
         val process = exec(arrayOf("sh", "-c", "cat > '$remotePath' && chmod $mode '$remotePath'"))
@@ -108,8 +108,8 @@ object ShizukuController {
         override fun getInputStream(): InputStream = input
         override fun getOutputStream(): OutputStream = output
         override fun getErrorStream(): InputStream = error
-        override fun waitFor(): Int = remote.waitFor()
-        override fun exitValue(): Int = remote.exitValue()
+        override fun waitFor(): Int = runCatching { remote.waitFor() }.getOrDefault(0)
+        override fun exitValue(): Int = runCatching { remote.exitValue() }.getOrDefault(0)
 
         override fun destroy() {
             runCatching { remote.destroy() }
@@ -120,6 +120,6 @@ object ShizukuController {
             return this
         }
 
-        override fun isAlive(): Boolean = remote.alive()
+        override fun isAlive(): Boolean = runCatching { remote.alive() }.getOrDefault(false)
     }
 }

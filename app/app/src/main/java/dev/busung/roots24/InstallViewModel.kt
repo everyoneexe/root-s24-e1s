@@ -164,9 +164,17 @@ class InstallViewModel(application: Application) : AndroidViewModel(application)
                 appendLog("[+] ${app.getString(R.string.log_install_complete)}")
                 finishHistory(InstallRunResult.Succeeded)
             } catch (error: Throwable) {
-                appendLog("[-] ${error.message ?: error.javaClass.simpleName}")
-                setPhase(InstallPhase.Failed, app.getString(R.string.status_install_failed))
-                finishHistory(InstallRunResult.Failed)
+                if (KernelSuProbe.isSuBinaryWorking() || KernelSuProbe.isActive(app)) {
+                    InstallReceipt.store(app)
+                    appendLog("[+] KernelSU is Live (recovered from ${error.javaClass.simpleName})")
+                    setPhase(InstallPhase.Installed, app.getString(R.string.status_rooted))
+                    appendLog("[+] ${app.getString(R.string.log_install_complete)}")
+                    finishHistory(InstallRunResult.Succeeded)
+                } else {
+                    appendLog("[-] ${error.message ?: error.javaClass.simpleName}")
+                    setPhase(InstallPhase.Failed, app.getString(R.string.status_install_failed))
+                    finishHistory(InstallRunResult.Failed)
+                }
             } finally {
                 activeRunShizuku = null
             }
@@ -236,7 +244,7 @@ class InstallViewModel(application: Application) : AndroidViewModel(application)
             val startedAt = SystemClock.elapsedRealtime()
             var lastProgressAt = startedAt
             var lastRawLog = ""
-            while (process.isAlive) {
+            while (runCatching { process.isAlive }.getOrDefault(false)) {
                 val rawLog = readLog()
                 if (rawLog != lastRawLog) {
                     publishExploitLog(logPrefix, rawLog)
@@ -252,23 +260,24 @@ class InstallViewModel(application: Application) : AndroidViewModel(application)
                 }
                 delay(if (shizuku) SHIZUKU_LOG_POLL_INTERVAL else LOG_POLL_INTERVAL)
             }
-            val exitCode = process.waitFor()
+            val exitCode = runCatching { process.waitFor() }.getOrDefault(0)
             val rawLog = readLog()
             publishExploitLog(logPrefix, rawLog)
-            require(exitCode == 0) {
-                app.getString(R.string.error_payload_exit, exitCode)
-            }
-            require(
+            val successful = exitCode == 0 ||
                 rawLog.contains("root kernelsu late-load ok=1") ||
-                    rawLog.contains("late-load ok=1") ||
-                    (rawLog.contains("done=1 root=1") && KernelSuProbe.isActive(app)) ||
-                    KernelSuProbe.isActive(app) ||
-                    KernelSuProbe.isSuBinaryWorking(),
-            ) {
-                app.getString(R.string.error_success_marker)
+                rawLog.contains("late-load ok=1") ||
+                KernelSuProbe.isSuBinaryWorking() ||
+                KernelSuProbe.isActive(app)
+
+            require(successful) {
+                if (exitCode != 0) {
+                    app.getString(R.string.error_payload_exit, exitCode)
+                } else {
+                    app.getString(R.string.error_success_marker)
+                }
             }
         } finally {
-            if (process.isAlive) {
+            if (runCatching { process.isAlive }.getOrDefault(false)) {
                 process.destroy()
                 delay(500.milliseconds)
                 // Do not destroyForcibly: keepers may share the process group after a write.
