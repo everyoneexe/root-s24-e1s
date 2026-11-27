@@ -186,8 +186,9 @@ private const val KERNEL_SU_NEXT_PACKAGE = "com.rifsxd.ksunext"
 private const val KERNEL_SU_URL =
     "https://github.com/tiann/KernelSU/releases/download/v3.3.0/KernelSU_v3.3.0_32601-release.apk"
 private const val KERNEL_SU_HOME_URL = "https://kernelsu.org/"
-private const val SHIZUKU_MANAGER_PACKAGE = "moe.shizuku.manager"
-private const val SHIZUKU_MANAGER_URL = "https://github.com/thedjchi/Shizuku/releases/"
+private const val SHIZUKU_MANAGER_PACKAGE = "moe.shizuku.privileged.api"
+private const val SHIZUKU_MANAGER_PACKAGE_LEGACY = "moe.shizuku.manager"
+private const val SHIZUKU_MANAGER_URL = "https://github.com/RikkaApps/Shizuku/releases/"
 
 private fun openKernelSuManager(context: Context) {
     val launch = context.packageManager.getLaunchIntentForPackage(KERNEL_SU_PACKAGE)
@@ -217,6 +218,7 @@ private val languageOptions = listOf(
 
 private fun openShizukuManager(context: Context) {
     val launch = context.packageManager.getLaunchIntentForPackage(SHIZUKU_MANAGER_PACKAGE)
+        ?: context.packageManager.getLaunchIntentForPackage(SHIZUKU_MANAGER_PACKAGE_LEGACY)
     if (launch != null) {
         context.startActivity(launch)
     } else {
