@@ -197,6 +197,9 @@ class InstallViewModel(application: Application) : AndroidViewModel(application)
         appendLog("[*] Exploit Engine: SamTimer (CVE-2026-98260)")
         appendLog("[*] Target Manager: $targetMgr")
 
+        // 0. Terminate old running exploit instance to release file locks
+        ShizukuController.exec(arrayOf("sh", "-c", "killall -9 libtimer.so cve-2026-98260 2>/dev/null || true")).waitFor()
+
         // 1. Ensure /data/local/tmp/samtimer exists
         ShizukuController.exec(arrayOf("mkdir", "-p", "-m", "0777", "/data/local/tmp/samtimer")).waitFor()
         ShizukuController.exec(arrayOf("mkdir", "-p", "-m", "0700", "/data/adb")).waitFor()

@@ -88,7 +88,8 @@ object ShizukuController {
     }.getOrDefault("")
 
     fun writeFile(remotePath: String, mode: String, source: InputStream) {
-        val process = exec(arrayOf("sh", "-c", "cat > '$remotePath' && chmod $mode '$remotePath'"))
+        val tmpPath = "$remotePath.tmp"
+        val process = exec(arrayOf("sh", "-c", "cat > '$tmpPath' && chmod $mode '$tmpPath' && mv -f '$tmpPath' '$remotePath'"))
         val exitCode = try {
             process.outputStream.use { output ->
                 source.use { input -> input.copyTo(output, DEFAULT_BUFFER_SIZE) }
