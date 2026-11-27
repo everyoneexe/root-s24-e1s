@@ -342,6 +342,20 @@ int get_pkg_from_apk_path(char *pkg, const char *path)
     return 0;
 }
 
+struct manager_cert_info {
+    unsigned expected_size;
+    const char *expected_sha256;
+};
+
+static const struct manager_cert_info ksu_allowed_managers[] = {
+    // 1. KernelSU Next (com.rifsxd.ksunext)
+    { 0x3e6, "79e590113c4c4c0c222978e413a5faa801666957b1212a328e46c00c69821bf7" },
+    // 2. Official KernelSU (me.weishu.kernelsu)
+    { 0x33b, "c371061b19d8c7d7d6133c6a9bafe198fa944e50c1b31c9d8daa8d7f1fc2d2d6" },
+    // 3. SukiSU Nova & Ultra (com.sukisu.nova / com.sukisu.ultra)
+    { 0x35c, "947ae944f3de4ed4c21a7e4f7953ecf351bfa2b36239da37a34111ad29993eef" },
+};
+
 bool is_manager_apk(char *path)
 {
 #ifdef KSU_MANAGER_PACKAGE
@@ -356,12 +370,11 @@ bool is_manager_apk(char *path)
         return false;
     }
 #endif
-    if (check_v2_signature(path, EXPECTED_SIZE, EXPECTED_HASH)) {
-        return true;
+    for (size_t i = 0; i < ARRAY_SIZE(ksu_allowed_managers); i++) {
+        if (check_v2_signature(path, ksu_allowed_managers[i].expected_size,
+                               ksu_allowed_managers[i].expected_sha256)) {
+            return true;
+        }
     }
-#ifdef EXPECTED_SIZE2
-    return check_v2_signature(path, EXPECTED_SIZE2, EXPECTED_HASH2);
-#else
     return false;
-#endif
 }
