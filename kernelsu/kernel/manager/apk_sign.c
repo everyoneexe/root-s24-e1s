@@ -347,6 +347,8 @@ struct manager_cert_info {
     const char *expected_sha256;
 };
 
+bool ksu_manager_is_sukisu = false;
+
 static const struct manager_cert_info ksu_allowed_managers[] = {
     // 1. KernelSU Next (com.rifsxd.ksunext)
     { 0x3e6, "79e590113c4c4c0c222978e413a5faa801666957b1212a328e46c00c69821bf7" },
@@ -373,6 +375,7 @@ bool is_manager_apk(char *path)
     for (size_t i = 0; i < ARRAY_SIZE(ksu_allowed_managers); i++) {
         if (check_v2_signature(path, ksu_allowed_managers[i].expected_size,
                                ksu_allowed_managers[i].expected_sha256)) {
+            ksu_manager_is_sukisu = (i == 2);
             return true;
         }
     }

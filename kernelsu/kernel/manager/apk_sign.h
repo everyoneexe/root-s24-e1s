@@ -3,6 +3,8 @@
 
 #include <linux/types.h>
 
+extern bool ksu_manager_is_sukisu;
+
 bool is_manager_apk(char *path);
 int get_pkg_from_apk_path(char *pkg, const char *path);
 

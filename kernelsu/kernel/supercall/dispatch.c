@@ -13,6 +13,8 @@
 #include "ksu.h"
 #include "runtime/ksud_boot.h"
 #include "feature/kernel_umount.h"
+#include <linux/string.h>
+#include "manager/apk_sign.h"
 #include "manager/manager_identity.h"
 #include "selinux/selinux.h"
 #include "infra/file_wrapper.h"
@@ -56,6 +58,9 @@ static int do_get_info(void __user *arg)
 #endif
     cmd.features = KSU_FEATURE_MAX;
     cmd.uapi_version = KERNEL_SU_UAPI_VERSION;
+    if (ksu_manager_is_sukisu && strncmp(current->comm, "ksud", 4) != 0) {
+        cmd.uapi_version = 6;
+    }
 
     if (copy_to_user(arg, &cmd, sizeof(cmd))) {
         pr_err("get_version: copy_to_user failed\n");
