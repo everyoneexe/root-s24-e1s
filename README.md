@@ -1,12 +1,12 @@
 # Root S24 (e1s / S921BXXSDCZB2)
 
-Per-boot local root on **Galaxy S24 SM-S921B** firmware `S921BXXSDCZB2`
-(kernel `6.1.138-android14-11`), then late-load **KernelSU** so
+Per-boot local root on **Galaxy S24 SM-S921B** (`e1s`) firmware `S921BXXSDCZB2`
+(kernel `6.1.138-android14-11`), late-loading **KernelSU** so
 `me.weishu.kernelsu` (or `com.rifsxd.ksunext`) reports Working LKM.
 
-Not affiliated with [Root My Galaxy](https://github.com/BuSung-dev/Root-My-Galaxy).
-No GitHub payload feed, no multi-device catalog. One firmware, bundled
-payload. Use a device you own.
+A specialized downstream fork of [Root My Galaxy](https://github.com/BuSung-dev/Root-My-Galaxy)
+by [BuSung-dev](https://github.com/BuSung-dev), pre-configured and optimized specifically
+for this single device & firmware combination with bundled offline payloads.
 
 ## Download
 
@@ -15,26 +15,26 @@ Install the APK from **[Releases](https://github.com/everyoneexe/root-s24-e1s/re
 KernelSU manager (required):
 [v3.3.0](https://github.com/tiann/KernelSU/releases/download/v3.3.0/KernelSU_v3.3.0_32601-release.apk)
 
-## Device
+## Device & Exploits
 
 | | |
 | --- | --- |
 | Model | SM-S921B |
-| Codename | e1s |
+| Codename | e1s (Samsung Exynos 2400) |
 | Firmware | S921BXXSDCZB2 |
 | Kernel | 6.1.138-android14-11 |
-| Bug | CVE-2026-43499 (futex PI UAF) |
-| Root | RAM-only; reboot drops it |
-| Manager | KernelSU v3.3.0 (or Next) |
+| Exploits | **CVE-2026-43499** (GhostLock / futex PI UAF)<br>**CVE-2026-98260** (SamTimer / posix-cpu-timers UAF) |
+| Root Mode | RAM-only (reboot drops it) |
+| Manager | KernelSU v3.3.0 / KernelSU-Next |
 
 ## Layout
 
 ```
-src/                 exploit + UMH helper (this target only)
-src/targets/e1s-S921BXXSDCZB2/
-docs/                this firmware + Next LKM notes
+src/                 GhostLock (CVE-2026-43499) exploit + UMH helper (Cortex-A720 pinned)
+cve-2026-98260/      SamTimer (CVE-2026-98260) tracepoint KASLR + UMH pipe exploit
+docs/                Target firmware analysis + Next LKM notes
 kernelsu/            Next-compat .ko + ksud, GPL module source
-app/                 Root S24 (Kotlin), bundled DCZB2 payload
+app/                 Root S24 Android application (Kotlin), bundled DCZB2 payload
 ```
 
 ## App
@@ -59,7 +59,7 @@ cd app
 KernelSU rebuild: DDK `ghcr.io/ylarod/ddk-min:android14-6.1-20260313`,
 vermagic `6.1.138-android14-11`. See [docs/kernelsu-next.md](docs/kernelsu-next.md).
 
-adb (clean boot), same payload the app bundles:
+### GhostLock (CVE-2026-43499) manual execution:
 
 ```sh
 export EXPLOIT_ATTEMPTS=1 P0_ATTEMPT_TIMEOUT_SEC=300 EXPLOIT_ATTEMPT_TIMEOUT_SEC=420
@@ -67,6 +67,12 @@ export EXPLOIT_ATTEMPTS=1 P0_ATTEMPT_TIMEOUT_SEC=300 EXPLOIT_ATTEMPT_TIMEOUT_SEC
   /data/local/tmp/cve-2026-43499-app.so \
   /data/local/tmp/cve-2026-43499-root \
   /data/local/tmp/dczb2.log
+```
+
+### SamTimer (CVE-2026-98260) manual execution:
+
+```sh
+/data/local/tmp/samtimer/libtimer.so umhpipe
 ```
 
 ## License
