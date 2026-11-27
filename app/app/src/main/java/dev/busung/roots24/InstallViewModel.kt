@@ -84,6 +84,9 @@ class InstallViewModel(application: Application) : AndroidViewModel(application)
         mutableHistory.value = historyStore.load()
         viewModelScope.launch(Dispatchers.IO) {
             val device = DeviceSnapshot.current()
+            if (AppPreferences.shizukuMode(app) && !ShizukuController.isRunning()) {
+                ShizukuController.pingUntilRunning(1_500L)
+            }
             if (KernelSuProbe.isActive(app)) {
                 mutableState.value = InstallUiState(
                     phase = InstallPhase.Installed,
@@ -253,11 +256,13 @@ class InstallViewModel(application: Application) : AndroidViewModel(application)
             val exitCode = runCatching { process.waitFor() }.getOrDefault(0)
             val rawLog = readLog()
             publishExploitLog(logPrefix, rawLog)
-            val successful = exitCode == 0 ||
+            val successful = !rawLog.contains("KSU_MISSING") && (
                 rawLog.contains("KSU_LOADED") ||
                 rawLog.contains("late-load ok=1") ||
                 KernelSuProbe.isSuBinaryWorking() ||
-                KernelSuProbe.isActive(app)
+                KernelSuProbe.isVisibleThroughShizuku() ||
+                KernelSuProbe.isVisibleToApp()
+            )
 
             require(successful) {
                 if (exitCode != 0) {

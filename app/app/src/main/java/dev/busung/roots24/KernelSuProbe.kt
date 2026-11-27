@@ -27,16 +27,17 @@ object KernelSuProbe {
 
     fun isVisibleThroughShizuku(): Boolean {
         if (!ShizukuController.isGranted()) return false
+        val modules = runCatching {
+            ShizukuController.capture(arrayOf("cat", "/proc/modules"))
+        }.getOrDefault("")
+        if (modules.lineSequence().any { it.startsWith("kernelsu ") }) return true
+
         val suCheck = runCatching {
             val out = ShizukuController.capture(arrayOf("su", "-v")).trim()
             out.isNotEmpty()
         }.getOrDefault(false)
         if (suCheck) return true
 
-        val modules = runCatching {
-            ShizukuController.capture(arrayOf("cat", "/proc/modules"))
-        }.getOrDefault("")
-        if (modules.lineSequence().any { it.startsWith("kernelsu ") }) return true
         return runCatching {
             ShizukuController.exec(arrayOf("test", "-d", "/sys/module/kernelsu")).waitFor() == 0
         }.getOrDefault(false)
@@ -51,8 +52,10 @@ object KernelSuProbe {
 
     fun isActive(context: Context): Boolean {
         if (isSuBinaryWorking()) return true
-        if (isVisibleThroughShizuku()) return true
         if (isVisibleToApp()) return true
-        return false
+        if (ShizukuController.isGranted()) {
+            return isVisibleThroughShizuku()
+        }
+        return InstallReceipt.isVerifiedForCurrentBoot(context)
     }
 }
