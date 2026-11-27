@@ -73,3 +73,12 @@ export EXPLOIT_ATTEMPTS=1 P0_ATTEMPT_TIMEOUT_SEC=300 EXPLOIT_ATTEMPT_TIMEOUT_SEC
 
 Exploit/helper: Apache-2.0 (see LICENSE and NOTICE).
 `kernelsu/kernel`: GPL-2.0.
+
+## Credits & Acknowledgements
+
+This standalone port is built on the research, tooling, and exploit foundations of the open-source Android security community:
+
+- **[BuSung-dev](https://github.com/BuSung-dev)** — Author of [Root My Galaxy](https://github.com/BuSung-dev/Root-My-Galaxy) and [Root-My-Galaxy-Payloads](https://github.com/BuSung-dev/Root-My-Galaxy-Payloads). The exploit architecture, Samsung UMH helper integration, and late-load patterns in this repository are directly derived from their pioneering work.
+- **[NebuSec / CyberMeowfia](https://github.com/NebuSec/CyberMeowfia)** — For the original [CVE-2026-43499 (IonStack)](https://github.com/NebuSec/CyberMeowfia/tree/main/IonStack/CVE-2026-43499/exploit) futex PI research and exploit proof of concept.
+- **[KernelSU](https://github.com/tiann/KernelSU)** (`tiann`) & **[KernelSU-Next](https://github.com/rifsxd/KernelSU-Next)** (`rifsxd`) — For the underlying kernel-assisted su and LKM framework.
+
