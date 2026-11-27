@@ -79,6 +79,10 @@
     <string name="material_color_description">Change the look</string>
     <string name="language">Language</string>
     <string name="language_description">Choose the app language</string>
+    <string name="root_manager">Root Manager</string>
+    <string name="root_manager_description">Target manager receiving su authorization</string>
+    <string name="exploit_engine">Exploit Engine</string>
+    <string name="exploit_engine_description">Choose kernel exploit backend</string>
     <string name="language_system">Follow system</string>
     <string name="language_korean" translatable="false">한국어</string>
     <string name="language_english" translatable="false">English</string>

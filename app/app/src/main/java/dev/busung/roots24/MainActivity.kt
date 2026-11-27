@@ -873,12 +873,18 @@ private fun SettingsPage(
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showColorDialog by remember { mutableStateOf(false) }
     var showAboutDialog by remember { mutableStateOf(false) }
+    var showRootManagerDialog by remember { mutableStateOf(false) }
+    var showExploitEngineDialog by remember { mutableStateOf(false) }
     var showShizukuMissingDialog by remember { mutableStateOf(false) }
     var showShizukuDisableWarningDialog by remember { mutableStateOf(false) }
     var languageMenuTop by remember { mutableStateOf(32.dp) }
     var colorMenuTop by remember { mutableStateOf(32.dp) }
+    var rootManagerMenuTop by remember { mutableStateOf(32.dp) }
+    var exploitEngineMenuTop by remember { mutableStateOf(32.dp) }
     val density = LocalDensity.current
     val currentLanguageTag = AppPreferences.languageTag(context)
+    var currentRootManager by remember { mutableStateOf(AppPreferences.rootManager(context)) }
+    var currentExploitEngine by remember { mutableStateOf(AppPreferences.exploitEngine(context)) }
 
     if (showShizukuDisableWarningDialog) {
         AlertDialog(
@@ -966,6 +972,38 @@ private fun SettingsPage(
         )
     }
 
+    if (showRootManagerDialog) {
+        val managers = RootManager.entries
+        SideChoiceMenu(
+            choices = managers.map { it.label },
+            selectedIndex = managers.indexOf(currentRootManager).coerceAtLeast(0),
+            topOffset = rootManagerMenuTop,
+            onSelected = { index ->
+                showRootManagerDialog = false
+                val selected = managers[index]
+                currentRootManager = selected
+                AppPreferences.setRootManager(context, selected)
+            },
+            onDismiss = { showRootManagerDialog = false },
+        )
+    }
+
+    if (showExploitEngineDialog) {
+        val engines = ExploitEngine.entries
+        SideChoiceMenu(
+            choices = engines.map { it.label },
+            selectedIndex = engines.indexOf(currentExploitEngine).coerceAtLeast(0),
+            topOffset = exploitEngineMenuTop,
+            onSelected = { index ->
+                showExploitEngineDialog = false
+                val selected = engines[index]
+                currentExploitEngine = selected
+                AppPreferences.setExploitEngine(context, selected)
+            },
+            onDismiss = { showExploitEngineDialog = false },
+        )
+    }
+
     if (showAboutDialog) {
         AboutDialog(onDismiss = { showAboutDialog = false })
     }
@@ -1016,6 +1054,34 @@ private fun SettingsPage(
                     onClick = {
                         clickHaptic(view)
                         showLanguageDialog = true
+                    },
+                )
+                SettingsCard(
+                    modifier = Modifier.onGloballyPositioned { coordinates ->
+                        rootManagerMenuTop = with(density) { coordinates.positionInWindow().y.toDp() }
+                    },
+                    icon = Icons.Rounded.Security,
+                    title = stringResource(R.string.root_manager),
+                    description = stringResource(R.string.root_manager_description),
+                    value = currentRootManager.label,
+                    position = SettingsCardPosition.Middle,
+                    onClick = {
+                        clickHaptic(view)
+                        showRootManagerDialog = true
+                    },
+                )
+                SettingsCard(
+                    modifier = Modifier.onGloballyPositioned { coordinates ->
+                        exploitEngineMenuTop = with(density) { coordinates.positionInWindow().y.toDp() }
+                    },
+                    icon = Icons.Rounded.Memory,
+                    title = stringResource(R.string.exploit_engine),
+                    description = stringResource(R.string.exploit_engine_description),
+                    value = currentExploitEngine.label,
+                    position = SettingsCardPosition.Middle,
+                    onClick = {
+                        clickHaptic(view)
+                        showExploitEngineDialog = true
                     },
                 )
                 SettingsSwitchCard(
@@ -1111,7 +1177,12 @@ private fun SettingsCard(
         ) {
             Icon(icon, contentDescription = null, modifier = Modifier.size(28.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(title, style = MaterialTheme.typography.titleMedium)
+                Text(
+                    title,
+                    style = MaterialTheme.typography.titleMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
                 Text(
                     description,
                     style = MaterialTheme.typography.bodyMedium,
@@ -1125,6 +1196,7 @@ private fun SettingsCard(
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary,
                 maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }

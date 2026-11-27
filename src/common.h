@@ -72,7 +72,14 @@
 #define KERNELSNITCH_MTE_ENABLED 0
 #endif
 #define MM_PARTIALS 5
-#define CORE 0
+/* e1s (Exynos 2400): CPU 0-3 = Cortex-A520 LITTLE (1.96 GHz, in-order),
+ * CPU 4-6 = Cortex-A720 mid (2.59 GHz), CPU 7-8 = Cortex-A720 high (2.90 GHz),
+ * CPU 9 = Cortex-X4 prime (3.21 GHz).
+ * Race threads need same cluster → deterministic L2 coherency, same IPC.
+ * CORE=7 / CONSUMER_CORE=8: same A720-high cluster, maximally symmetric. */
+#ifndef CORE
+#define CORE 7
+#endif
 #ifndef KSNITCH_COLLISIONS
 #define KSNITCH_COLLISIONS 4
 #endif
@@ -141,7 +148,13 @@
 #define P0_DATA_ALIAS_CONST(image_addr) \
   (P0_PAGE_OFFSET | ((image_addr) - KIMAGE_TEXT_BASE + P0_KERNEL_PHYS_DELTA))
 
+/* CONSUMER_CORE: adjacent A720-high core — same cluster as CORE=7, different
+ * physical core so the two threads run truly in parallel (SMP), not via
+ * time-slicing.  SLIDE_WAITER_CORE: isolation on same cluster. */
 #define CONSUMER_CORE (CORE + 1)
+#ifndef SLIDE_WAITER_CORE
+#define SLIDE_WAITER_CORE CORE
+#endif
 #define CONSUMER_MAX_CALLS 1
 #define PSELECT_ROUTE_NFDS 320
 #define PSELECT_CONSUMER_NICE 19

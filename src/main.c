@@ -38,6 +38,10 @@ static void durable_log_checkpoint(const char *stage) {
 #if !defined(APP_PHYS_P0_ORACLE) || !APP_PHYS_P0_ORACLE
 void *waiter_thread(void *arg __attribute__((unused))) {
   disable_rseq_for_thread();
+  /* Pin to CORE (CPU 7, Cortex-A720 high) before any futex syscall.
+   * waiter and owner must run on the same cluster so the PI requeue
+   * race sees coherent, same-latency memory without cross-cluster traffic. */
+  pin_to_core(CORE);
 
   int tid = (int)syscall(SYS_gettid);
   atomic_store(&waiter_tid, tid);
@@ -70,6 +74,10 @@ void *waiter_thread(void *arg __attribute__((unused))) {
 
 void *owner_thread(void *arg __attribute__((unused))) {
   disable_rseq_for_thread();
+  /* Owner also pinned to CORE so it races the waiter with equal cache
+   * residency.  Both threads share the same A720-high L2 slice (CPUs 7-8),
+   * giving the PI chain handoff the minimum possible cross-core latency. */
+  pin_to_core(CORE);
 
   long lock_target = futex_op(&f_pi_target, FUTEX_LOCK_PI, 0, NULL, NULL, 0);
   if (lock_target != 0) {

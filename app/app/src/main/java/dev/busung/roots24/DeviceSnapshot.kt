@@ -39,7 +39,7 @@ data class DeviceSnapshot(
     }
 }
 
-const val SAFE_UPTIME_MILLIS = 90_000L
+const val SAFE_UPTIME_MILLIS = 180_000L
 
 fun formatUptime(uptimeMillis: Long, context: android.content.Context): String {
     val totalSeconds = (uptimeMillis / 1000L).coerceAtLeast(0)

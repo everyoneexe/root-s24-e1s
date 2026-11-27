@@ -149,6 +149,25 @@ static inline void reset_cpu_pin(void)
     SYSCHK(sched_setaffinity(0, sizeof(cpu_set_t), &cpuset));
 }
 
+/* Allow brute-force worker threads to use mid and big clusters only
+ * (CPUs 4-9 on Exynos 2400), excluding LITTLE cores (0-3) which are heavily
+ * loaded by Android system services and thus introduce L2 pollution. */
+static inline void set_perf_cluster_pin(void)
+{
+    cpu_set_t cpuset;
+    CPU_ZERO(&cpuset);
+    /* mid cluster: CPUs 4-6 (Cortex-A720 2.59 GHz) */
+    CPU_SET(4, &cpuset);
+    CPU_SET(5, &cpuset);
+    CPU_SET(6, &cpuset);
+    /* high cluster: CPUs 7-8 (Cortex-A720 2.90 GHz) */
+    CPU_SET(7, &cpuset);
+    CPU_SET(8, &cpuset);
+    /* prime core: CPU 9 (Cortex-X4 3.21 GHz) */
+    CPU_SET(9, &cpuset);
+    SYSCHK(sched_setaffinity(0, sizeof(cpu_set_t), &cpuset));
+}
+
 static inline void set_limit(void)
 {
     struct rlimit r;

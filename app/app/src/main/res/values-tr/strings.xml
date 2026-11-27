@@ -79,6 +79,10 @@
     <string name="material_color_description">Görünümü değiştir</string>
     <string name="language">Dil</string>
     <string name="language_description">Uygulama dilini seçin</string>
+    <string name="root_manager">Root Yöneticisi</string>
+    <string name="root_manager_description">Yetkilendirme yapılacak root yöneticisi</string>
+    <string name="exploit_engine">Exploit Motoru</string>
+    <string name="exploit_engine_description">Çekirdek açık motorunu seçin</string>
     <string name="language_system">Sistemi izle</string>
     <string name="color_dynamic">Sistem dinamik</string>
     <string name="color_blue">Mavi</string>

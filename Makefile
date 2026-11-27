@@ -13,6 +13,7 @@ endif
 PRELOAD := $(OUTDIR)/cve-2026-43499
 APP_PRELOAD := $(OUTDIR)/cve-2026-43499-app.so
 ROOT_HELPER := $(OUTDIR)/cve-2026-43499-root
+SAMTIMER := $(OUTDIR)/cve-2026-98260
 
 PRELOAD_SRCS := \
   src/main.c \
@@ -41,7 +42,7 @@ COMMON_CFLAGS := \
 
 .PHONY: all clean
 
-all: $(PRELOAD) $(APP_PRELOAD) $(ROOT_HELPER)
+all: $(PRELOAD) $(APP_PRELOAD) $(ROOT_HELPER) $(SAMTIMER)
 
 $(OUTDIR):
 	mkdir -p $@
@@ -57,5 +58,8 @@ $(APP_PRELOAD): $(APP_PRELOAD_SRCS) $(TARGET_HEADER) src/offset.h src/common.h s
 	$(TARGET_CC) -DAPP_PAYLOAD=1 -fPIC $(COMMON_CFLAGS) $(APP_PRELOAD_SRCS) \
 	  -shared -pthread -o $@
 
+$(SAMTIMER): src/cve-2026-98260/timer.c src/cve-2026-98260/offsets.h | $(OUTDIR)
+	$(TARGET_CC) -O2 -std=gnu11 -static -ffunction-sections -fdata-sections $< -o $@
+
 clean:
-	rm -f $(PRELOAD) $(APP_PRELOAD) $(ROOT_HELPER)
+	rm -f $(PRELOAD) $(APP_PRELOAD) $(ROOT_HELPER) $(SAMTIMER)

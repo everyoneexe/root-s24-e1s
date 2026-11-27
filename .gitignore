@@ -17,4 +17,6 @@ local.properties
 .idea/
 .cxx/
 .externalNativeBuild/
+AGENT.md
+dirtyfrag/
 captures/
