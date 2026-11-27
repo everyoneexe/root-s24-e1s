@@ -8,6 +8,13 @@ A specialized downstream fork of [Root My Galaxy](https://github.com/BuSung-dev/
 by [BuSung-dev](https://github.com/BuSung-dev), pre-configured and optimized specifically
 for this single device & firmware combination with bundled offline payloads.
 
+> [!WARNING]
+> **Disclaimer — Educational & Research Purposes Only**
+>
+> This project, its source code, and any prebuilt binaries are provided strictly for **educational and authorized security research purposes only**. Use this software only on devices that you own and have explicit permission to test.
+>
+> Kernel exploitation and loading out-of-tree kernel modules carry inherent risks, including kernel panics, instability, bootloops, data loss, or voided warranties. **The authors and contributors accept no responsibility or liability for any direct or indirect damage, data loss, device malfunction, or misuse resulting from the use of this repository.** You proceed entirely at your own risk.
+
 ## Download
 
 Install the APK from **[Releases](https://github.com/everyoneexe/root-s24-e1s/releases)**.
