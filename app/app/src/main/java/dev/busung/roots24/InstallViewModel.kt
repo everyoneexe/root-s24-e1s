@@ -199,10 +199,13 @@ class InstallViewModel(application: Application) : AndroidViewModel(application)
 
         // 1. Ensure /data/local/tmp/samtimer exists
         ShizukuController.exec(arrayOf("mkdir", "-p", "-m", "0777", "/data/local/tmp/samtimer")).waitFor()
+        ShizukuController.exec(arrayOf("mkdir", "-p", "-m", "0700", "/data/adb")).waitFor()
 
         // 2. Stage binary and ksud
         shizukuStage(payloads.samtimer, "/data/local/tmp/samtimer/libtimer.so", "755")
         shizukuStage(payloads.ksudNext, "/data/local/tmp/samtimer/ksud", "755")
+        shizukuStage(payloads.ksudNext, "/data/local/tmp/ksud", "755")
+        shizukuStage(payloads.ksudNext, "/data/local/tmp/.ksud-stage", "755")
 
         // 3. Write target manager package
         ShizukuController.exec(arrayOf("sh", "-c", "echo '$targetMgr' > /data/local/tmp/samtimer/manager_pkg")).waitFor()
